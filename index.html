@@ -852,6 +852,7 @@
         });
 
         // 9. 跑力指数趋势
+        const powerTrend = calculateTrendLine(monthlyData.map(d => d.powerIndex));
         new Chart(document.getElementById('powerIndex'), {
             type: 'line',
             data: {
@@ -862,6 +863,13 @@
                     borderColor: '#00b894',
                     backgroundColor: 'rgba(0, 184, 148, 0.1)',
                     fill: true,
+                    tension: 0.4
+                }, {
+                    label: '趋势线',
+                    data: powerTrend,
+                    borderColor: '#fdcb6e',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
                     tension: 0.4
                 }]
             },

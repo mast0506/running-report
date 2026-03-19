@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跑步数据分析 - 2024.11 至 2026.3 (完整版)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        header { text-align: center; padding: 30px 20px; }
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { color: #a0a0c0; font-size: 1rem; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card h3 { font-size: 0.75rem; color: #8080a0; margin-bottom: 8px; }
+        .stat-card .value { font-size: 1.6rem; font-weight: bold; color: #fff; }
+        .stat-card .unit { font-size: 0.7rem; color: #a0a0c0; }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+        .chart-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .chart-container h2 {
+            font-size: 1rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        .chart-wrapper { position: relative; height: 350px; }
+        footer { text-align: center; padding: 20px; color: #707090; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏃 跑步数据分析 (完整版)</h1>
+            <div class="subtitle">2024年11月 - 2026年3月 | 全部 385 条记录 | Running Performance Analysis</div>
+        </header>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>总跑步次数</h3>
+                <div class="value">385</div>
+                <div class="unit">runs</div>
+            </div>
+            <div class="stat-card">
+                <h3>总距离</h3>
+                <div class="value">3,156</div>
+                <div class="unit">km</div>
+            </div>
+            <div class="stat-card">
+                <h3>最佳配速</h3>
+                <div class="value">2:37</div>
+                <div class="unit">min/km</div>
+            </div>
+            <div class="stat-card">
+                <h3>平均心率</h3>
+                <div class="value">146</div>
+                <div class="unit">bpm</div>
+            </div>
+            <div class="stat-card">
+                <h3>平均步频</h3>
+                <div class="value">184</div>
+                <div class="unit">spm</div>
+            </div>
+            <div class="stat-card">
+                <h3>平均步幅</h3>
+                <div class="value">0.88</div>
+                <div class="unit">m</div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h2>📊 月度跑量趋势</h2>
+                <div class="chart-wrapper"><canvas id="monthlyVolume"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>⚡ 平均配速趋势 (含趋势线)</h2>
+                <div class="chart-wrapper"><canvas id="paceTrend"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>❤️ 心率趋势 (含趋势线)</h2>
+                <div class="chart-wrapper"><canvas id="hrTrend"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>👟 步频趋势 (含趋势线)</h2>
+                <div class="chart-wrapper"><canvas id="cadenceTrend"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>🦶 步幅趋势 (含趋势线)</h2>
+                <div class="chart-wrapper"><canvas id="strideTrend"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>⛰️ 月度累计爬升</h2>
+                <div class="chart-wrapper"><canvas id="elevation"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>❤️ 心率区间分布</h2>
+                <div class="chart-wrapper"><canvas id="hrZones"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>📏 跑步距离分布</h2>
+                <div class="chart-wrapper"><canvas id="distanceDist"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>📈 跑力指数趋势 (Power Index)</h2>
+                <div class="chart-wrapper"><canvas id="powerIndex"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h2>💪 训练强度分布</h2>
+                <div class="chart-wrapper"><canvas id="intensity"></canvas></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Generated by Kimi Claw 🦞 | Data Source: Garmin Running Records | Total Records: 385 | Period: 2024.11 - 2026.03</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 完整数据 - 385条记录
+        const runData = [{date: '2024-11-03', distance: 13.02, pace: 9.58, hr: 149, cadence: 142, stride: 0.71, ascent: 283},
+{date: '2024-11-04', distance: 10.26, pace: 7.57, hr: 140, cadence: 178, stride: 0.74, ascent: 124},
+{date: '2024-11-06', distance: 10.19, pace: 7.37, hr: 140, cadence: 175, stride: 0.77, ascent: 107},
+{date: '2024-11-08', distance: 7.82, pace: 7.57, hr: 150, cadence: 181, stride: 0.73, ascent: 0},
+{date: '2024-11-10', distance: 12.25, pace: 7.42, hr: 150, cadence: 174, stride: 0.78, ascent: 491},
+{date: '2024-11-12', distance: 11.11, pace: 7.10, hr: 143, cadence: 176, stride: 0.80, ascent: 143},
+{date: '2024-11-15', distance: 15.29, pace: 7.13, hr: 144, cadence: 178, stride: 0.79, ascent: 270},
+{date: '2024-11-18', distance: 10.05, pace: 7.32, hr: 147, cadence: 177, stride: 0.77, ascent: 316},
+{date: '2024-11-19', distance: 1.73, pace: 8.42, hr: 151, cadence: 178, stride: 0.67, ascent: 61},
+{date: '2024-11-20', distance: 8.01, pace: 6.78, hr: 161, cadence: 182, stride: 0.81, ascent: 47},
+{date: '2024-11-22', distance: 13.61, pace: 6.98, hr: 154, cadence: 174, stride: 0.83, ascent: 45},
+{date: '2024-11-27', distance: 10.19, pace: 7.27, hr: 149, cadence: 178, stride: 0.78, ascent: 119},
+{date: '2024-12-05', distance: 7.33, pace: 6.60, hr: 151, cadence: 181, stride: 0.84, ascent: 42},
+{date: '2024-12-06', distance: 14.00, pace: 6.88, hr: 153, cadence: 176, stride: 0.82, ascent: 156},
+{date: '2024-12-08', distance: 10.01, pace: 6.87, hr: 153, cadence: 181, stride: 0.80, ascent: 75},
+{date: '2024-12-10', distance: 15.01, pace: 6.88, hr: 159, cadence: 179, stride: 0.81, ascent: 179},
+{date: '2024-12-12', distance: 10.02, pace: 6.83, hr: 150, cadence: 183, stride: 0.80, ascent: 212},
+{date: '2024-12-13', distance: 10.01, pace: 6.42, hr: 149, cadence: 182, stride: 0.86, ascent: 288},
+{date: '2024-12-14', distance: 0.58, pace: 6.30, hr: 155, cadence: 177, stride: 0.89, ascent: 16},
+{date: '2024-12-14', distance: 0.40, pace: 4.63, hr: 149, cadence: 170, stride: 1.27, ascent: 12},
+{date: '2024-12-14', distance: 0.81, pace: 6.28, hr: 144, cadence: 181, stride: 0.88, ascent: 19},
+{date: '2024-12-15', distance: 15.00, pace: 6.93, hr: 154, cadence: 186, stride: 0.78, ascent: 55},
+{date: '2024-12-17', distance: 16.02, pace: 6.65, hr: 146, cadence: 183, stride: 0.82, ascent: 180},
+{date: '2024-12-18', distance: 1.60, pace: 7.60, hr: 138, cadence: 143, stride: 0.92, ascent: 0},
+{date: '2024-12-19', distance: 4.76, pace: 5.95, hr: 162, cadence: 188, stride: 0.89, ascent: 74},
+{date: '2024-12-19', distance: 5.01, pace: 5.87, hr: 150, cadence: 189, stride: 0.90, ascent: 127},
+{date: '2024-12-20', distance: 10.07, pace: 6.50, hr: null, cadence: null, stride: null, ascent: 0},
+{date: '2024-12-22', distance: 15.00, pace: 6.78, hr: 152, cadence: 185, stride: 0.80, ascent: 49},
+{date: '2024-12-24', distance: 10.00, pace: 6.35, hr: 148, cadence: 182, stride: 0.87, ascent: 182},
+{date: '2024-12-26', distance: 10.00, pace: 6.20, hr: 152, cadence: 181, stride: 0.89, ascent: 77},
+{date: '2024-12-28', distance: 19.00, pace: 6.63, hr: 146, cadence: 184, stride: 0.82, ascent: 299},
+{date: '2024-12-30', distance: 10.00, pace: 7.07, hr: 125, cadence: 177, stride: 0.80, ascent: 260},
+{date: '2025-01-01', distance: 21.33, pace: 6.10, hr: 154, cadence: 187, stride: 0.88, ascent: 151},
+{date: '2025-01-03', distance: 5.91, pace: 7.52, hr: 123, cadence: 174, stride: 0.76, ascent: 7},
+{date: '2025-01-04', distance: 10.00, pace: 6.17, hr: 156, cadence: 180, stride: 0.90, ascent: 330},
+{date: '2025-01-05', distance: 10.08, pace: 6.43, hr: 147, cadence: 179, stride: 0.87, ascent: 304},
+{date: '2025-01-10', distance: 10.01, pace: 6.05, hr: 149, cadence: 183, stride: 0.90, ascent: 83},
+{date: '2025-01-11', distance: 15.00, pace: 6.15, hr: 155, cadence: 186, stride: 0.88, ascent: 127},
+{date: '2025-01-13', distance: 15.00, pace: 6.32, hr: 151, cadence: 182, stride: 0.87, ascent: 16},
+{date: '2025-01-17', distance: 11.74, pace: 6.88, hr: 148, cadence: 181, stride: 0.80, ascent: 149},
+{date: '2025-01-17', distance: 0.86, pace: 7.42, hr: 131, cadence: 180, stride: 0.75, ascent: 3},
+{date: '2025-01-18', distance: 4.32, pace: 8.67, hr: 142, cadence: 163, stride: 0.71, ascent: 106},
+{date: '2025-01-18', distance: 8.06, pace: 5.97, hr: 155, cadence: 185, stride: 0.91, ascent: 433},
+{date: '2025-01-19', distance: 9.21, pace: 6.33, hr: 156, cadence: 186, stride: 0.85, ascent: 202},
+{date: '2025-01-21', distance: 2.59, pace: 6.78, hr: 141, cadence: 183, stride: 0.81, ascent: 34},
+{date: '2025-01-21', distance: 15.00, pace: 6.38, hr: 149, cadence: 183, stride: 0.86, ascent: 175},
+{date: '2025-01-22', distance: 10.01, pace: 6.92, hr: 125, cadence: 183, stride: 0.79, ascent: 104},
+{date: '2025-01-25', distance: 10.12, pace: 6.33, hr: 148, cadence: 184, stride: 0.86, ascent: 303},
+{date: '2025-01-27', distance: 10.23, pace: 6.25, hr: 156, cadence: 180, stride: 0.89, ascent: 89},
+{date: '2025-01-28', distance: 10.00, pace: 6.07, hr: 151, cadence: 183, stride: 0.90, ascent: 142},
+{date: '2025-01-29', distance: 15.80, pace: 6.18, hr: 139, cadence: 176, stride: 0.92, ascent: 439},
+{date: '2025-01-30', distance: 11.11, pace: 6.05, hr: 144, cadence: 183, stride: 0.90, ascent: 134},
+{date: '2025-01-31', distance: 16.01, pace: 6.27, hr: 142, cadence: 182, stride: 0.88, ascent: 186},
+{date: '2025-02-01', distance: 11.07, pace: 6.83, hr: 144, cadence: 170, stride: 0.86, ascent: 188},
+{date: '2025-02-02', distance: 16.24, pace: 6.43, hr: 138, cadence: 188, stride: 0.83, ascent: 206},
+{date: '2025-02-03', distance: 18.08, pace: 6.22, hr: 134, cadence: 189, stride: 0.85, ascent: 323},
+{date: '2025-02-04', distance: 12.69, pace: 6.28, hr: 134, cadence: 187, stride: 0.85, ascent: 128},
+{date: '2025-02-08', distance: 10.00, pace: 6.22, hr: 140, cadence: 188, stride: 0.86, ascent: 0},
+{date: '2025-02-10', distance: 16.00, pace: 6.12, hr: 155, cadence: 189, stride: 0.87, ascent: 393},
+{date: '2025-02-11', distance: 0.76, pace: 6.50, hr: 158, cadence: 186, stride: 0.83, ascent: 64},
+{date: '2025-02-11', distance: 10.54, pace: 5.90, hr: 155, cadence: 188, stride: 0.90, ascent: 262},
+{date: '2025-02-12', distance: 4.00, pace: 6.12, hr: 137, cadence: 186, stride: 0.88, ascent: 63},
+{date: '2025-02-13', distance: 1.68, pace: 6.27, hr: 145, cadence: 187, stride: 0.85, ascent: 29},
+{date: '2025-02-13', distance: 11.53, pace: 5.95, hr: 145, cadence: 185, stride: 0.91, ascent: 313},
+{date: '2025-02-15', distance: 20.00, pace: 6.25, hr: 145, cadence: 187, stride: 0.85, ascent: 480},
+{date: '2025-02-16', distance: 20.00, pace: 6.00, hr: 151, cadence: 188, stride: 0.89, ascent: 476},
+{date: '2025-02-18', distance: 12.01, pace: 5.83, hr: 151, cadence: 190, stride: 0.90, ascent: 119},
+{date: '2025-02-19', distance: 10.07, pace: 6.50, hr: 132, cadence: 190, stride: 0.81, ascent: 299},
+{date: '2025-02-21', distance: 7.27, pace: 6.02, hr: 159, cadence: 179, stride: 0.93, ascent: 76},
+{date: '2025-02-21', distance: 3.56, pace: 6.80, hr: 147, cadence: 182, stride: 0.81, ascent: 16},
+{date: '2025-02-23', distance: 15.01, pace: 6.13, hr: 149, cadence: 188, stride: 0.87, ascent: 68},
+{date: '2025-02-24', distance: 11.68, pace: 6.18, hr: 151, cadence: 184, stride: 0.88, ascent: 259},
+{date: '2025-02-28', distance: 2.44, pace: 6.63, hr: 139, cadence: 192, stride: 0.78, ascent: 23},
+{date: '2025-02-28', distance: 3.38, pace: 7.40, hr: 136, cadence: 148, stride: 0.92, ascent: 201},
+{date: '2025-02-28', distance: 14.01, pace: 5.88, hr: 144, cadence: 187, stride: 0.91, ascent: 560},
+{date: '2025-03-02', distance: 20.00, pace: 5.97, hr: 150, cadence: 189, stride: 0.89, ascent: 102},
+{date: '2025-03-04', distance: 12.05, pace: 5.77, hr: 148, cadence: 189, stride: 0.92, ascent: 113},
+{date: '2025-03-05', distance: 10.00, pace: 5.35, hr: 160, cadence: 197, stride: 0.95, ascent: 113},
+{date: '2025-03-05', distance: 2.05, pace: 6.22, hr: 141, cadence: 191, stride: 0.84, ascent: 31},
+{date: '2025-03-05', distance: 2.16, pace: 6.08, hr: 132, cadence: 187, stride: 0.88, ascent: 23},
+{date: '2025-03-06', distance: 12.01, pace: 5.58, hr: 149, cadence: 190, stride: 0.94, ascent: 235},
+{date: '2025-03-06', distance: 1.11, pace: 6.68, hr: 119, cadence: 185, stride: 0.81, ascent: 19},
+{date: '2025-03-08', distance: 0.68, pace: 7.07, hr: 132, cadence: 182, stride: 0.78, ascent: 0},
+{date: '2025-03-08', distance: 15.00, pace: 5.75, hr: 148, cadence: 189, stride: 0.92, ascent: 156},
+{date: '2025-03-08', distance: 1.09, pace: 6.68, hr: 126, cadence: 182, stride: 0.82, ascent: 19},
+{date: '2025-03-09', distance: 24.00, pace: 6.08, hr: 145, cadence: 190, stride: 0.87, ascent: 304},
+{date: '2025-03-11', distance: 12.12, pace: 5.62, hr: 151, cadence: 191, stride: 0.93, ascent: 137},
+{date: '2025-03-11', distance: 0.83, pace: 6.58, hr: 131, cadence: 183, stride: 0.83, ascent: 20},
+{date: '2025-03-12', distance: 1.30, pace: 6.17, hr: 140, cadence: 192, stride: 0.85, ascent: 0},
+{date: '2025-03-12', distance: 12.14, pace: 5.60, hr: 155, cadence: 192, stride: 0.93, ascent: 396},
+{date: '2025-03-13', distance: 0.41, pace: 4.10, hr: 132, cadence: 174, stride: 1.40, ascent: 11},
+{date: '2025-03-13', distance: 10.01, pace: 5.97, hr: 146, cadence: 186, stride: 0.90, ascent: 172},
+{date: '2025-03-15', distance: 1.02, pace: 6.32, hr: 144, cadence: 192, stride: 0.83, ascent: 0},
+{date: '2025-03-15', distance: 9.02, pace: 5.77, hr: 151, cadence: 193, stride: 0.90, ascent: 87},
+{date: '2025-03-16', distance: 15.01, pace: 6.02, hr: 154, cadence: 186, stride: 0.89, ascent: 79},
+{date: '2025-03-18', distance: 12.01, pace: 5.80, hr: 148, cadence: 192, stride: 0.90, ascent: 144},
+{date: '2025-03-19', distance: 6.25, pace: 6.22, hr: 143, cadence: 161, stride: 1.00, ascent: 83},
+{date: '2025-03-19', distance: 6.05, pace: 5.87, hr: 137, cadence: 190, stride: 0.90, ascent: 75},
+{date: '2025-03-20', distance: 11.82, pace: 5.02, hr: 141, cadence: 198, stride: 1.01, ascent: 0},
+{date: '2025-03-22', distance: 1.05, pace: 6.42, hr: 139, cadence: 192, stride: 0.81, ascent: 6},
+{date: '2025-03-22', distance: 9.36, pace: 5.62, hr: 151, cadence: 194, stride: 0.92, ascent: 103},
+{date: '2025-03-22', distance: 3.41, pace: 5.25, hr: 134, cadence: 197, stride: 0.97, ascent: 0},
+{date: '2025-03-23', distance: 20.01, pace: 5.85, hr: 149, cadence: 196, stride: 0.87, ascent: 272},
+{date: '2025-03-24', distance: 10.01, pace: 5.72, hr: 145, cadence: 194, stride: 0.89, ascent: 210},
+{date: '2025-03-26', distance: 6.01, pace: 6.32, hr: 145, cadence: 161, stride: 0.98, ascent: 94},
+{date: '2025-03-26', distance: 6.01, pace: 5.65, hr: 145, cadence: 196, stride: 0.90, ascent: 83},
+{date: '2025-03-27', distance: 1.97, pace: 9.65, hr: 120, cadence: 146, stride: 0.71, ascent: 32},
+{date: '2025-03-27', distance: 8.03, pace: 6.15, hr: 139, cadence: 191, stride: 0.85, ascent: 137},
+{date: '2025-03-29', distance: 12.16, pace: 5.72, hr: 152, cadence: 193, stride: 0.90, ascent: 148},
+{date: '2025-03-30', distance: 0.55, pace: 13.55, hr: 110, cadence: 103, stride: 0.72, ascent: 26},
+{date: '2025-03-30', distance: 25.01, pace: 5.70, hr: 149, cadence: 193, stride: 0.91, ascent: 412},
+{date: '2025-03-30', distance: 1.02, pace: 9.37, hr: 109, cadence: 186, stride: 0.57, ascent: 62},
+{date: '2025-04-01', distance: 12.17, pace: 5.58, hr: 150, cadence: 194, stride: 0.94, ascent: 9},
+{date: '2025-04-02', distance: 12.06, pace: 5.60, hr: 153, cadence: 193, stride: 0.93, ascent: 13},
+{date: '2025-04-04', distance: 10.07, pace: 5.60, hr: 155, cadence: 196, stride: 0.91, ascent: 44},
+{date: '2025-04-05', distance: 21.16, pace: 5.42, hr: 156, cadence: 199, stride: 0.92, ascent: 61},
+{date: '2025-04-06', distance: 25.22, pace: 5.43, hr: 153, cadence: 195, stride: 0.94, ascent: 68},
+{date: '2025-04-11', distance: 12.13, pace: 5.88, hr: 156, cadence: 194, stride: 0.87, ascent: 32},
+{date: '2025-04-12', distance: 1.20, pace: 6.55, hr: 141, cadence: 193, stride: 0.79, ascent: 7},
+{date: '2025-04-12', distance: 12.03, pace: 5.85, hr: 151, cadence: 196, stride: 0.87, ascent: 40},
+{date: '2025-04-12', distance: 1.13, pace: 6.43, hr: 135, cadence: 191, stride: 0.83, ascent: 12},
+{date: '2025-04-13', distance: 1.04, pace: 6.27, hr: 138, cadence: 191, stride: 0.80, ascent: 0},
+{date: '2025-04-13', distance: 15.01, pace: 6.38, hr: 153, cadence: 185, stride: 0.84, ascent: 17},
+{date: '2025-04-15', distance: 1.20, pace: 6.55, hr: 147, cadence: 190, stride: 0.80, ascent: 7},
+{date: '2025-04-15', distance: 11.01, pace: 5.53, hr: 156, cadence: 195, stride: 0.92, ascent: 32},
+{date: '2025-04-15', distance: 1.09, pace: 6.60, hr: 130, cadence: 187, stride: 0.82, ascent: 14},
+{date: '2025-04-16', distance: 7.91, pace: 6.27, hr: 149, cadence: 165, stride: 0.91, ascent: 28},
+{date: '2025-04-16', distance: 4.01, pace: 5.58, hr: 148, cadence: 196, stride: 0.91, ascent: 7},
+{date: '2025-04-16', distance: 1.10, pace: 6.67, hr: 131, cadence: 187, stride: 0.81, ascent: 14},
+{date: '2025-04-17', distance: 1.12, pace: 6.47, hr: 139, cadence: 191, stride: 0.81, ascent: 5},
+{date: '2025-04-17', distance: 10.36, pace: 5.72, hr: 151, cadence: 195, stride: 0.89, ascent: 36},
+{date: '2025-04-17', distance: 1.12, pace: 6.28, hr: 131, cadence: 187, stride: 0.83, ascent: 14},
+{date: '2025-04-19', distance: 10.19, pace: 7.28, hr: 137, cadence: 162, stride: 0.84, ascent: 35},
+{date: '2025-04-19', distance: 10.02, pace: 7.03, hr: 141, cadence: 173, stride: 0.81, ascent: 24},
+{date: '2025-04-20', distance: 15.56, pace: 6.20, hr: 147, cadence: 190, stride: 0.85, ascent: 23},
+{date: '2025-04-22', distance: 12.01, pace: 5.55, hr: 149, cadence: 193, stride: 0.93, ascent: 36},
+{date: '2025-04-22', distance: 1.08, pace: 6.88, hr: 121, cadence: 186, stride: 0.78, ascent: 13},
+{date: '2025-04-23', distance: 5.19, pace: 6.20, hr: 144, cadence: 161, stride: 0.96, ascent: 0},
+{date: '2025-04-23', distance: 7.18, pace: 6.02, hr: 142, cadence: 191, stride: 0.87, ascent: 77},
+{date: '2025-04-24', distance: 1.09, pace: 6.53, hr: 134, cadence: 186, stride: 0.79, ascent: 5},
+{date: '2025-04-24', distance: 10.11, pace: 5.65, hr: 145, cadence: 195, stride: 0.90, ascent: 34},
+{date: '2025-04-24', distance: 1.13, pace: 6.60, hr: 129, cadence: 186, stride: 0.80, ascent: 13},
+{date: '2025-04-26', distance: 25.04, pace: 6.20, hr: 146, cadence: 186, stride: 0.86, ascent: 104},
+{date: '2025-04-26', distance: 1.07, pace: 6.93, hr: 126, cadence: 183, stride: 0.78, ascent: 15},
+{date: '2025-04-27', distance: 15.03, pace: 5.85, hr: 140, cadence: 192, stride: 0.89, ascent: 56},
+{date: '2025-04-27', distance: 1.11, pace: 6.95, hr: 121, cadence: 183, stride: 0.77, ascent: 15},
+{date: '2025-04-29', distance: 12.41, pace: 5.82, hr: 148, cadence: 191, stride: 0.89, ascent: 24},
+{date: '2025-04-30', distance: 5.54, pace: 5.93, hr: 148, cadence: 190, stride: 0.88, ascent: 18},
+{date: '2025-05-01', distance: 11.01, pace: 6.05, hr: 151, cadence: 185, stride: 0.90, ascent: 80},
+{date: '2025-05-02', distance: 10.85, pace: 6.63, hr: 144, cadence: 175, stride: 0.85, ascent: 95},
+{date: '2025-05-04', distance: 14.01, pace: 6.15, hr: 148, cadence: 190, stride: 0.87, ascent: 102},
+{date: '2025-05-06', distance: 12.01, pace: 6.60, hr: 146, cadence: 179, stride: 0.84, ascent: 91},
+{date: '2025-05-07', distance: 6.02, pace: 6.03, hr: 148, cadence: 192, stride: 0.86, ascent: 18},
+{date: '2025-05-08', distance: 8.35, pace: 7.18, hr: 133, cadence: 162, stride: 1.05, ascent: 0},
+{date: '2025-05-09', distance: 15.01, pace: 5.95, hr: 143, cadence: 194, stride: 0.86, ascent: 62},
+{date: '2025-05-10', distance: 25.01, pace: 5.52, hr: 156, cadence: 195, stride: 0.92, ascent: 67},
+{date: '2025-05-11', distance: 20.01, pace: 5.75, hr: 150, cadence: 193, stride: 0.90, ascent: 233},
+{date: '2025-05-13', distance: 10.01, pace: 5.92, hr: 144, cadence: 189, stride: 0.89, ascent: 61},
+{date: '2025-05-13', distance: 1.05, pace: 8.32, hr: 117, cadence: 161, stride: 0.73, ascent: 3},
+{date: '2025-05-14', distance: 5.27, pace: 6.10, hr: 150, cadence: 160, stride: 0.99, ascent: 12},
+{date: '2025-05-14', distance: 6.01, pace: 5.67, hr: 151, cadence: 189, stride: 0.93, ascent: 20},
+{date: '2025-05-14', distance: 1.06, pace: 6.28, hr: 131, cadence: 184, stride: 0.87, ascent: 14},
+{date: '2025-05-15', distance: 10.01, pace: 5.78, hr: 144, cadence: 189, stride: 0.91, ascent: 44},
+{date: '2025-05-15', distance: 1.65, pace: 7.80, hr: 109, cadence: 145, stride: 0.91, ascent: 1},
+{date: '2025-05-18', distance: 12.01, pace: 6.63, hr: 147, cadence: 178, stride: 0.84, ascent: 13},
+{date: '2025-05-20', distance: 13.14, pace: 5.90, hr: 150, cadence: 190, stride: 0.89, ascent: 34},
+{date: '2025-05-20', distance: 1.13, pace: 6.60, hr: 127, cadence: 183, stride: 0.82, ascent: 14},
+{date: '2025-05-21', distance: 13.08, pace: 5.80, hr: 145, cadence: 190, stride: 0.90, ascent: 36},
+{date: '2025-05-21', distance: 1.06, pace: 6.80, hr: 123, cadence: 185, stride: 0.79, ascent: 15},
+{date: '2025-05-22', distance: 10.02, pace: 5.85, hr: 137, cadence: 190, stride: 0.90, ascent: 22},
+{date: '2025-05-22', distance: 0.36, pace: 5.97, hr: 102, cadence: 175, stride: 0.91, ascent: 0},
+{date: '2025-05-22', distance: 1.08, pace: 6.92, hr: 119, cadence: 186, stride: 0.77, ascent: 14},
+{date: '2025-05-24', distance: 30.01, pace: 7.12, hr: 140, cadence: 180, stride: 0.78, ascent: 114},
+{date: '2025-05-25', distance: 20.01, pace: 6.20, hr: 151, cadence: 187, stride: 0.86, ascent: 33},
+{date: '2025-05-27', distance: 10.01, pace: 5.93, hr: 146, cadence: 186, stride: 0.89, ascent: 28},
+{date: '2025-05-27', distance: 1.04, pace: 7.18, hr: 124, cadence: 180, stride: 0.76, ascent: 15},
+{date: '2025-05-28', distance: 5.65, pace: 6.22, hr: 142, cadence: 160, stride: 1.06, ascent: 1},
+{date: '2025-05-28', distance: 6.01, pace: 5.50, hr: 148, cadence: 188, stride: 0.96, ascent: 8},
+{date: '2025-05-28', distance: 0.77, pace: 7.12, hr: 127, cadence: 185, stride: 0.77, ascent: 15},
+{date: '2025-05-29', distance: 10.01, pace: 5.82, hr: 146, cadence: 189, stride: 0.91, ascent: 33},
+{date: '2025-05-29', distance: 1.06, pace: 7.13, hr: 120, cadence: 183, stride: 0.76, ascent: 14},
+{date: '2025-05-31', distance: 20.01, pace: 6.77, hr: 142, cadence: 177, stride: 0.83, ascent: 43},
+{date: '2025-06-02', distance: 13.08, pace: 5.72, hr: 151, cadence: 190, stride: 0.91, ascent: 41},
+{date: '2025-06-02', distance: 1.07, pace: 6.87, hr: 127, cadence: 183, stride: 0.79, ascent: 13},
+{date: '2025-06-04', distance: 13.77, pace: 5.45, hr: 157, cadence: 193, stride: 0.95, ascent: 27},
+{date: '2025-06-04', distance: 1.76, pace: 6.58, hr: 132, cadence: 182, stride: 0.84, ascent: 0},
+{date: '2025-06-06', distance: 30.01, pace: 5.95, hr: 152, cadence: 189, stride: 0.88, ascent: 134},
+{date: '2025-06-07', distance: 21.06, pace: 7.13, hr: 143, cadence: 174, stride: 0.83, ascent: 671},
+{date: '2025-06-08', distance: 25.01, pace: 5.62, hr: 149, cadence: 193, stride: 0.92, ascent: 111},
+{date: '2025-06-10', distance: 13.08, pace: 5.78, hr: 151, cadence: 188, stride: 0.92, ascent: 1},
+{date: '2025-06-11', distance: 6.35, pace: 5.70, hr: 144, cadence: 194, stride: 0.90, ascent: 2},
+{date: '2025-06-13', distance: 11.07, pace: 6.75, hr: 155, cadence: 173, stride: 0.86, ascent: 78},
+{date: '2025-06-14', distance: 13.08, pace: 6.12, hr: 152, cadence: 189, stride: 0.87, ascent: 41},
+{date: '2025-06-15', distance: 20.01, pace: 5.88, hr: 154, cadence: 189, stride: 0.92, ascent: 1},
+{date: '2025-06-16', distance: 13.08, pace: 5.83, hr: 148, cadence: 186, stride: 0.92, ascent: 50},
+{date: '2025-06-16', distance: 0.80, pace: 7.02, hr: 105, cadence: 168, stride: 0.93, ascent: 0},
+{date: '2025-06-18', distance: 13.08, pace: 5.68, hr: 152, cadence: 187, stride: 0.94, ascent: 65},
+{date: '2025-06-18', distance: 0.76, pace: 7.02, hr: 123, cadence: 185, stride: 0.77, ascent: 1},
+{date: '2025-06-19', distance: 11.07, pace: 5.67, hr: 147, cadence: 187, stride: 0.95, ascent: 32},
+{date: '2025-06-20', distance: 5.01, pace: 5.78, hr: 149, cadence: 189, stride: 0.93, ascent: 0},
+{date: '2025-06-22', distance: 35.01, pace: 6.75, hr: 150, cadence: 186, stride: 0.83, ascent: 4},
+{date: '2025-06-23', distance: 25.01, pace: 5.83, hr: 148, cadence: 189, stride: 0.90, ascent: 34},
+{date: '2025-06-25', distance: 11.07, pace: 5.68, hr: 148, cadence: 192, stride: 0.91, ascent: 1},
+{date: '2025-06-26', distance: 11.07, pace: 6.18, hr: 144, cadence: 186, stride: 0.87, ascent: 14},
+{date: '2025-06-28', distance: 10.92, pace: 8.15, hr: 146, cadence: 159, stride: 0.76, ascent: 284},
+{date: '2025-06-28', distance: 11.07, pace: 6.07, hr: 156, cadence: 187, stride: 0.88, ascent: 18},
+{date: '2025-06-29', distance: 13.08, pace: 5.75, hr: 153, cadence: 188, stride: 0.92, ascent: 19},
+{date: '2025-07-01', distance: 13.08, pace: 6.22, hr: 137, cadence: 188, stride: 0.85, ascent: 36},
+{date: '2025-07-03', distance: 4.02, pace: 9.78, hr: 118, cadence: 100, stride: 0.76, ascent: 108},
+{date: '2025-07-03', distance: 2.84, pace: 6.62, hr: 143, cadence: 177, stride: 0.85, ascent: 14},
+{date: '2025-07-03', distance: 3.18, pace: 6.78, hr: 138, cadence: 175, stride: 0.83, ascent: 1},
+{date: '2025-07-04', distance: 32.52, pace: 6.43, hr: 153, cadence: 186, stride: 0.84, ascent: 41},
+{date: '2025-07-05', distance: 29.74, pace: 6.90, hr: 147, cadence: 188, stride: 0.78, ascent: 124},
+{date: '2025-07-06', distance: 27.40, pace: 7.53, hr: 147, cadence: 176, stride: 0.73, ascent: 394},
+{date: '2025-07-08', distance: 11.07, pace: 6.43, hr: 145, cadence: 185, stride: 0.83, ascent: 3},
+{date: '2025-07-09', distance: 11.07, pace: 6.13, hr: 137, cadence: 183, stride: 0.88, ascent: 40},
+{date: '2025-07-10', distance: 11.07, pace: 5.98, hr: 142, cadence: 186, stride: 0.89, ascent: 39},
+{date: '2025-07-12', distance: 21.31, pace: 6.27, hr: 147, cadence: 185, stride: 0.85, ascent: 93},
+{date: '2025-07-12', distance: 1.17, pace: 7.52, hr: 127, cadence: 177, stride: 0.76, ascent: 14},
+{date: '2025-07-13', distance: 13.08, pace: 6.47, hr: 137, cadence: 179, stride: 0.86, ascent: 51},
+{date: '2025-07-15', distance: 11.07, pace: 6.08, hr: 150, cadence: 184, stride: 0.88, ascent: 42},
+{date: '2025-07-16', distance: 13.08, pace: 6.03, hr: 147, cadence: 180, stride: 0.91, ascent: 52},
+{date: '2025-07-17', distance: 11.32, pace: 6.02, hr: 147, cadence: 180, stride: 0.92, ascent: 47},
+{date: '2025-07-19', distance: 19.28, pace: 7.22, hr: 142, cadence: 173, stride: 0.81, ascent: 91},
+{date: '2025-07-20', distance: 20.04, pace: 6.43, hr: 143, cadence: 187, stride: 0.83, ascent: 48},
+{date: '2025-07-22', distance: 11.07, pace: 6.17, hr: 150, cadence: 185, stride: 0.87, ascent: 45},
+{date: '2025-07-23', distance: 3.00, pace: 6.63, hr: 148, cadence: 178, stride: 0.83, ascent: 1},
+{date: '2025-07-23', distance: 8.01, pace: 5.85, hr: 154, cadence: 180, stride: 0.94, ascent: 0},
+{date: '2025-07-26', distance: 8.01, pace: 6.62, hr: 148, cadence: 182, stride: 0.83, ascent: 26},
+{date: '2025-07-27', distance: 7.72, pace: 9.07, hr: 147, cadence: 102, stride: 1.07, ascent: 1},
+{date: '2025-07-27', distance: 4.01, pace: 5.85, hr: 150, cadence: 190, stride: 0.90, ascent: 0},
+{date: '2025-07-28', distance: 6.02, pace: 6.93, hr: 152, cadence: 178, stride: 0.81, ascent: 73},
+{date: '2025-07-30', distance: 9.83, pace: 6.38, hr: 154, cadence: 179, stride: 0.87, ascent: 34},
+{date: '2025-08-05', distance: 29.80, pace: 6.67, hr: 141, cadence: 186, stride: 0.81, ascent: 93},
+{date: '2025-08-06', distance: 15.20, pace: 5.75, hr: 143, cadence: 192, stride: 0.90, ascent: 2},
+{date: '2025-08-07', distance: 31.14, pace: 6.32, hr: 141, cadence: 187, stride: 0.83, ascent: 81},
+{date: '2025-08-08', distance: 13.44, pace: 6.85, hr: 132, cadence: 180, stride: 0.81, ascent: 30},
+{date: '2025-08-10', distance: 16.07, pace: 5.40, hr: 143, cadence: 188, stride: 0.97, ascent: 1},
+{date: '2025-08-12', distance: 15.05, pace: 5.63, hr: 148, cadence: 188, stride: 0.94, ascent: 0},
+{date: '2025-08-13', distance: 12.49, pace: 5.87, hr: 145, cadence: 186, stride: 0.92, ascent: 0},
+{date: '2025-08-15', distance: 18.55, pace: 5.52, hr: 146, cadence: 187, stride: 0.95, ascent: 1},
+{date: '2025-08-16', distance: 20.70, pace: 5.38, hr: 150, cadence: 187, stride: 0.96, ascent: 8},
+{date: '2025-08-17', distance: 10.92, pace: 5.77, hr: 151, cadence: 186, stride: 0.93, ascent: 15},
+{date: '2025-08-19', distance: 2.85, pace: 5.65, hr: 152, cadence: 187, stride: 0.94, ascent: 0},
+{date: '2025-08-20', distance: 11.01, pace: 6.22, hr: 138, cadence: 177, stride: 0.90, ascent: 0},
+{date: '2025-08-21', distance: 7.04, pace: 6.48, hr: 137, cadence: 185, stride: 0.83, ascent: 54},
+{date: '2025-08-21', distance: 1.02, pace: 6.97, hr: 118, cadence: 183, stride: 0.78, ascent: 6},
+{date: '2025-08-22', distance: 30.48, pace: 6.23, hr: 156, cadence: 189, stride: 0.84, ascent: 288},
+{date: '2025-08-23', distance: 31.59, pace: 6.62, hr: 146, cadence: 184, stride: 0.82, ascent: 294},
+{date: '2025-08-24', distance: 27.47, pace: 6.50, hr: 150, cadence: 192, stride: 0.80, ascent: 262},
+{date: '2025-08-26', distance: 11.07, pace: 6.57, hr: 132, cadence: 190, stride: 0.80, ascent: 2},
+{date: '2025-08-28', distance: 11.06, pace: 6.05, hr: 148, cadence: 191, stride: 0.87, ascent: 49},
+{date: '2025-08-29', distance: 6.55, pace: 6.12, hr: 123, cadence: 188, stride: 0.87, ascent: 1},
+{date: '2025-08-30', distance: 15.04, pace: 5.98, hr: 148, cadence: 187, stride: 0.89, ascent: 6},
+{date: '2025-08-31', distance: 20.01, pace: 6.03, hr: 150, cadence: 187, stride: 0.88, ascent: 11},
+{date: '2025-09-02', distance: 15.30, pace: 6.03, hr: 151, cadence: 186, stride: 0.88, ascent: 45},
+{date: '2025-09-02', distance: 1.29, pace: 7.10, hr: 127, cadence: 183, stride: 0.77, ascent: 16},
+{date: '2025-09-03', distance: 7.35, pace: 6.82, hr: 154, cadence: 138, stride: 1.11, ascent: 0},
+{date: '2025-09-03', distance: 4.03, pace: 6.00, hr: 151, cadence: 184, stride: 0.92, ascent: 0},
+{date: '2025-09-03', distance: 1.65, pace: 5.95, hr: 147, cadence: 184, stride: 0.94, ascent: 0},
+{date: '2025-09-03', distance: 0.91, pace: 6.50, hr: 130, cadence: 186, stride: 0.84, ascent: 2},
+{date: '2025-09-04', distance: 12.01, pace: 6.22, hr: 140, cadence: 183, stride: 0.87, ascent: 51},
+{date: '2025-09-06', distance: 1.01, pace: 7.43, hr: 133, cadence: 187, stride: 0.71, ascent: 3},
+{date: '2025-09-06', distance: 15.31, pace: 6.43, hr: 147, cadence: 184, stride: 0.84, ascent: 59},
+{date: '2025-09-06', distance: 1.14, pace: 7.52, hr: 123, cadence: 175, stride: 0.76, ascent: 13},
+{date: '2025-09-07', distance: 25.01, pace: 6.25, hr: 146, cadence: 188, stride: 0.84, ascent: 93},
+{date: '2025-09-09', distance: 14.34, pace: 6.03, hr: 147, cadence: 183, stride: 0.89, ascent: 60},
+{date: '2025-09-10', distance: 11.03, pace: 6.82, hr: 152, cadence: 133, stride: 1.10, ascent: 0},
+{date: '2025-09-10', distance: 1.99, pace: 5.70, hr: 154, cadence: 185, stride: 0.99, ascent: 0},
+{date: '2025-09-10', distance: 1.16, pace: 7.27, hr: 127, cadence: 184, stride: 0.83, ascent: 0},
+{date: '2025-09-12', distance: 12.18, pace: 6.07, hr: 144, cadence: 187, stride: 0.87, ascent: 56},
+{date: '2025-09-13', distance: 12.23, pace: 6.03, hr: 136, cadence: 187, stride: 0.88, ascent: 22},
+{date: '2025-09-14', distance: 2.01, pace: 5.00, hr: 157, cadence: 197, stride: 1.01, ascent: 1},
+{date: '2025-09-14', distance: 20.02, pace: 6.08, hr: 149, cadence: 191, stride: 0.86, ascent: 21},
+{date: '2025-09-16', distance: 12.14, pace: 6.13, hr: 136, cadence: 190, stride: 0.85, ascent: 56},
+{date: '2025-09-17', distance: 2.01, pace: 7.60, hr: 133, cadence: 185, stride: 0.76, ascent: 0},
+{date: '2025-09-17', distance: 10.81, pace: 6.82, hr: 146, cadence: 133, stride: 1.12, ascent: 0},
+{date: '2025-09-17', distance: 2.00, pace: 5.82, hr: 150, cadence: 186, stride: 0.98, ascent: 0},
+{date: '2025-09-17', distance: 0.79, pace: 7.12, hr: 124, cadence: 184, stride: 0.81, ascent: 0},
+{date: '2025-09-18', distance: 12.22, pace: 6.12, hr: 138, cadence: 186, stride: 0.87, ascent: 49},
+{date: '2025-09-20', distance: 1.01, pace: 4.95, hr: 158, cadence: 190, stride: 1.05, ascent: 0},
+{date: '2025-09-20', distance: 2.03, pace: 5.23, hr: 160, cadence: 193, stride: 0.99, ascent: 0},
+{date: '2025-09-20', distance: 0.96, pace: 5.17, hr: 147, cadence: 189, stride: 1.02, ascent: 0},
+{date: '2025-09-20', distance: 15.01, pace: 5.35, hr: 158, cadence: 189, stride: 0.99, ascent: 10},
+{date: '2025-09-20', distance: 1.34, pace: 6.72, hr: 131, cadence: 184, stride: 0.81, ascent: 18},
+{date: '2025-09-22', distance: 1.23, pace: 7.43, hr: 132, cadence: 180, stride: 0.73, ascent: 3},
+{date: '2025-09-22', distance: 10.64, pace: 6.08, hr: 137, cadence: 186, stride: 0.88, ascent: 21},
+{date: '2025-09-23', distance: 10.01, pace: 5.83, hr: 145, cadence: 189, stride: 0.90, ascent: 13},
+{date: '2025-09-23', distance: 1.21, pace: 6.67, hr: 128, cadence: 188, stride: 0.80, ascent: 2},
+{date: '2025-09-24', distance: 10.01, pace: 5.58, hr: 148, cadence: 187, stride: 0.95, ascent: 4},
+{date: '2025-09-24', distance: 0.70, pace: 6.88, hr: 133, cadence: 186, stride: 0.78, ascent: 1},
+{date: '2025-09-25', distance: 4.01, pace: 6.30, hr: 134, cadence: 187, stride: 0.85, ascent: 10},
+{date: '2025-09-25', distance: 10.93, pace: 6.30, hr: 145, cadence: 184, stride: 0.86, ascent: 41},
+{date: '2025-09-26', distance: 11.16, pace: 5.95, hr: 148, cadence: 185, stride: 0.90, ascent: 35},
+{date: '2025-09-27', distance: 4.01, pace: 5.17, hr: 144, cadence: 187, stride: 1.02, ascent: 16},
+{date: '2025-09-27', distance: 6.01, pace: 6.45, hr: 141, cadence: 183, stride: 0.84, ascent: 12},
+{date: '2025-09-28', distance: 8.06, pace: 6.65, hr: 146, cadence: 181, stride: 0.82, ascent: 69},
+{date: '2025-09-29', distance: 1.01, pace: 9.37, hr: 135, cadence: 95, stride: 1.07, ascent: 1},
+{date: '2025-09-29', distance: 6.06, pace: 6.73, hr: 132, cadence: 186, stride: 0.79, ascent: 0},
+{date: '2025-10-01', distance: 29.41, pace: 8.90, hr: 141, cadence: 145, stride: 0.75, ascent: 93},
+{date: '2025-10-02', distance: 32.68, pace: 6.38, hr: 151, cadence: 181, stride: 0.87, ascent: 46},
+{date: '2025-10-03', distance: 34.00, pace: 6.48, hr: 154, cadence: 183, stride: 0.85, ascent: 150},
+{date: '2025-10-04', distance: 27.35, pace: 7.28, hr: 149, cadence: 176, stride: 0.79, ascent: 703},
+{date: '2025-10-13', distance: 8.01, pace: 6.50, hr: 143, cadence: 183, stride: 0.84, ascent: 5},
+{date: '2025-10-14', distance: 10.01, pace: 6.32, hr: 136, cadence: 182, stride: 0.87, ascent: 60},
+{date: '2025-10-15', distance: 10.30, pace: 6.25, hr: 138, cadence: 181, stride: 0.87, ascent: 29},
+{date: '2025-10-17', distance: 7.01, pace: 6.37, hr: 143, cadence: 182, stride: 0.86, ascent: 23},
+{date: '2025-10-18', distance: 5.14, pace: 5.80, hr: 155, cadence: 186, stride: 0.93, ascent: 48},
+{date: '2025-10-19', distance: 42.32, pace: 5.65, hr: 159, cadence: 189, stride: 0.93, ascent: 227},
+{date: '2025-10-22', distance: 10.01, pace: 5.92, hr: 148, cadence: 183, stride: 0.92, ascent: 9},
+{date: '2025-10-24', distance: 14.01, pace: 6.33, hr: 143, cadence: 179, stride: 0.88, ascent: 18},
+{date: '2025-10-26', distance: 12.01, pace: 6.48, hr: 148, cadence: 183, stride: 0.84, ascent: 34},
+{date: '2025-10-28', distance: 11.18, pace: 6.63, hr: 151, cadence: 180, stride: 0.83, ascent: 39},
+{date: '2025-11-01', distance: 10.01, pace: 6.10, hr: 157, cadence: 183, stride: 0.89, ascent: 24},
+{date: '2025-11-02', distance: 7.02, pace: 6.10, hr: 157, cadence: 180, stride: 0.91, ascent: 6},
+{date: '2025-11-04', distance: 12.00, pace: 7.57, hr: 140, cadence: 154, stride: 0.82, ascent: 57},
+{date: '2025-11-06', distance: 10.01, pace: 6.18, hr: 146, cadence: 185, stride: 0.86, ascent: 43},
+{date: '2025-11-09', distance: 3.11, pace: 6.05, hr: 154, cadence: 191, stride: 0.86, ascent: 2},
+{date: '2025-11-09', distance: 12.41, pace: 6.53, hr: 155, cadence: 180, stride: 0.85, ascent: 11},
+{date: '2025-11-11', distance: 12.01, pace: 5.93, hr: 157, cadence: 184, stride: 0.91, ascent: 57},
+{date: '2025-11-14', distance: 10.00, pace: 6.22, hr: 151, cadence: 184, stride: 0.88, ascent: 19},
+{date: '2025-11-15', distance: 25.01, pace: 6.20, hr: 153, cadence: 186, stride: 0.86, ascent: 105},
+{date: '2025-11-16', distance: 6.35, pace: 8.65, hr: 130, cadence: 162, stride: 0.72, ascent: 80},
+{date: '2025-11-18', distance: 10.01, pace: 6.17, hr: 148, cadence: 185, stride: 0.87, ascent: 38},
+{date: '2025-11-19', distance: 5.34, pace: 7.03, hr: 147, cadence: 139, stride: 1.12, ascent: 0},
+{date: '2025-11-19', distance: 4.01, pace: 6.02, hr: 148, cadence: 183, stride: 0.90, ascent: 27},
+{date: '2025-11-20', distance: 10.06, pace: 6.25, hr: 142, cadence: 185, stride: 0.86, ascent: 37},
+{date: '2025-11-21', distance: 5.06, pace: 7.37, hr: 127, cadence: 179, stride: 0.75, ascent: 8},
+{date: '2025-11-22', distance: 23.06, pace: 6.38, hr: 146, cadence: 189, stride: 0.82, ascent: 67},
+{date: '2025-11-27', distance: 7.01, pace: 6.48, hr: 145, cadence: 186, stride: 0.82, ascent: 31},
+{date: '2025-12-01', distance: 27.26, pace: 6.07, hr: 154, cadence: 192, stride: 0.85, ascent: 59},
+{date: '2025-12-03', distance: 9.61, pace: 6.27, hr: 
